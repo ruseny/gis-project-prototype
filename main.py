@@ -13,6 +13,9 @@ from folium.plugins import GroupedLayerControl
 import json
 import pandas as pd
 
+import altair as alt
+import branca
+
 @st.cache_data
 def read_geojson(path):
     with open(path, "r") as dir:
@@ -66,7 +69,7 @@ st.title("Psychology of Climate Change - Prototype")
 
 
 with st.sidebar:
-    
+
     st.title("Variable selection")
 
     with st.container(border = True, gap = None):
@@ -160,6 +163,7 @@ if view_choice == "Global view":
             }
         ).add_to(m)
 
+    # create an icon for chart popups
     chart_icon = folium.CustomIcon(
         icon_image = "candlestick-chart.png", 
         icon_size = (20, 20), 
@@ -167,16 +171,46 @@ if view_choice == "Global view":
         popup_anchor = (0, -10)
     )
 
-    folium.Marker(
+    # get chart data for usa
+    chart_data_usa = survey_data.loc[
+        (survey_data["country_code"] == "USA") &
+        (survey_data["intervention"].isin(["control", intervention_selection])), 
+        ["intervention", outcome_var_selection]
+    ]
+    # create chart object
+    chart_object_usa = alt.Chart(chart_data_usa).mark_boxplot().encode(
+        alt.X("intervention:N"), 
+        alt.Y(outcome_var_selection + ":Q").scale(zero = False),
+        alt.Color("intervention:N").legend(None)
+    )
+    # pass the object to vega
+    chart_vega_usa = folium.VegaLite(
+        chart_object_usa,
+        width = 300,
+        height = 200
+    )
+    
+    # pass the vega to popup
+    popup_usa = folium.Popup()
+    chart_vega_usa.add_to(popup_usa)
+
+    # define the marker
+    marker_usa = folium.Marker(
         location = [38.0,-97.0], 
         icon = chart_icon, 
-        popup = "Here goes the viz for the country"
-    ).add_to(m)
+        lazy = True
+    )
+
+    # pass the popup to the marker
+    popup_usa.add_to(marker_usa)
+    marker_usa.add_to(m)
 
     map = st_folium(
         m, 
         use_container_width = True
     )
+
+    
 
 if view_choice == "Country comparison":
     
