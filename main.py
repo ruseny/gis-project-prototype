@@ -177,21 +177,21 @@ if view_choice == "Global view":
         (survey_data["intervention"].isin(["control", intervention_selection])), 
         ["intervention", outcome_var_selection]
     ]
+
     # create chart object
-    chart_object_usa = alt.Chart(chart_data_usa).mark_boxplot().encode(
+    chart_html_usa = alt.Chart(chart_data_usa).mark_boxplot().encode(
         alt.X("intervention:N"), 
         alt.Y(outcome_var_selection + ":Q").scale(zero = False),
         alt.Color("intervention:N").legend(None)
-    )
-    # pass the object to vega
-    chart_vega_usa = folium.VegaLite(
-        chart_object_usa,
+    ).properties(
         width = 300,
         height = 200
-    )
+    ).to_html()
+
+    iframe_usa = branca.element.IFrame(html = chart_html_usa , width = 400 , height = 300)    
     
     # pass the vega to popup
-    popup_usa = folium.Popup("Here will be the chart", max_width = 300)
+    popup_usa = folium.Popup(iframe_usa)
     #chart_vega_usa.add_to(popup_usa)
 
     # define the marker
