@@ -191,8 +191,8 @@ if view_choice == "Global view":
     )
     
     # pass the vega to popup
-    popup_usa = folium.Popup()
-    chart_vega_usa.add_to(popup_usa)
+    popup_usa = folium.Popup("Here will be the chart", max_width = 300)
+    #chart_vega_usa.add_to(popup_usa)
 
     # define the marker
     marker_usa = folium.Marker(
