@@ -3,6 +3,20 @@ import pandas as pd
 import geopandas as gpd
 import branca
 
+def reset_all_filters():
+    """Setzt alle Filter explizit auf ihre Startwerte zurück."""
+    st.session_state["num_ctr_filter"] = 63   # Slider auf Max
+    st.session_state["top_bottom"] = "Top"    # Switch auf Top
+    
+    # Auch die Länderauswahl unten resetten
+    if "countries_to_display" in st.session_state:
+        del st.session_state["countries_to_display"]
+
+def reset_multiselect():
+    """Löscht die Auswahl im Multiselect, wenn der Slider bewegt wird."""
+    if "countries_to_display" in st.session_state:
+        del st.session_state["countries_to_display"]
+
 
 ### Data loading and processing ################################################################
 @st.cache_data

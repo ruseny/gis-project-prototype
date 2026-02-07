@@ -38,53 +38,78 @@ country_gdf = merge_country_data(country_gdf_raw, country_aggregates, country_ba
 #######################################################################################
 
 ### Sidebar for data customisation ################################################################
+outcomes = {
+    "belief_cc": "Measures climate change convictions on a scale from 0 (not at all accurate) to 100 (extremely accurate). The score averages agreement with four key statements regarding the necessity of climate action, human causes, and the urgency of the global emergency.",
+    "policy_support": "Measures agreement with climate policies on a scale from 0 (not at all) to 100 (very much so). The score reflects average support across nine areas, including carbon taxes, public transport expansion, renewable energy investment, and the protection of natural ecosystems.",
+    "share_social_media": "Measures willingness to share a climate-fact about meat and dairy consumption on social media. Participants were presented with an educational post and asked if they would share it.",
+    "wept": "Measures real-world pro-environmental behavior using the Work for Environmental Protection Task (WEPT). Participants performed voluntary, repetitive cognitive tasks to earn tree-planting donations."
+}
+
 with sb_panel:
-    st.header("Customise Data")
+    st.header("⚙️ Customise Data")
+    st.markdown('<div style="margin: 5px 0; border-top: 1px solid #ddd;"></div>', unsafe_allow_html=True)
 
     with st.container():
-        st.subheader("Measurement")
+        st.subheader("Climate Engagement Metric")
         outcome_var_selection = st.selectbox(
-            "Please select a measurement to visualise on the map:",
+            "Please select a metric to visualise on the map:",
             options = list(outcome_var_mapper.keys()),
-            format_func = lambda x: outcome_var_mapper[x]
+            format_func = lambda x: outcome_var_mapper[x],
         )
-        with st.popover(f"info"):
-            st.write(f"Detailed information about {outcome_var_mapper[outcome_var_selection]}.")
+
+        info_text = outcomes.get(outcome_var_selection)
+        with st.popover(f"Info on Metric"):
+            st.markdown(f"**{outcome_var_mapper[outcome_var_selection]}**")
+            st.write(info_text)
     
+    with st.container():
+        st.subheader("Focus of Analysis")
+        ctr_filter_crit = st.radio(
+            "",
+            options=["Average Level", "Opinion Heterogeneity (Std. Deviation)"],
+            index=0, 
+            #help="",
+            label_visibility="collapsed"
+        )
+
     with st.container():
         st.subheader("Country Filters")
 
         with st.expander("Top or Bottom scores"):
-            ctr_filter_crit = st.radio(
-                "Select criterion for filtering:",
-                options=["Average levels", "Polarisation"],
-                index = None, 
-                key="ctr_filter_crit"
-            )
+            #ctr_filter_crit = st.radio(
+            #    "Select criterion for filtering:",
+            #    options=["Average levels", "Polarisation"],
+            #    index = None, 
+            #    key="ctr_filter_crit"
+            #)
             num_ctr_filter = st.slider(
                 "Number of countries to display:", 
-                1, 61, 61, 
+                1, 63, 63, 
                 disabled=(ctr_filter_crit is None), 
-                key="num_ctr_filter"
+                key="num_ctr_filter",
+                on_change=reset_multiselect
             )
             top_bottom = st.segmented_control(
                 label="Top or bottom", 
                 options=["Top", "Bottom"], 
                 default="Top", 
                 disabled=(ctr_filter_crit is None), 
-                key="top_bottom"
+                key="top_bottom",
+                on_change=reset_multiselect
             )
+            
             reset_ctr_1 = st.button(
                 "Reset filters", 
-                on_click=reset_session_state, 
-                args=("ctr_filter_crit", "num_ctr_filter", "top_bottom"),
+                on_click=reset_all_filters#reset_session_state, 
+                #args=("ctr_filter_crit", "num_ctr_filter", "top_bottom"),
                 )
             if reset_ctr_1:
                 ctr_filter_crit = None
-                num_ctr_filter = 61
+                num_ctr_filter = 63
                 top_bottom = "Top"
-            # Update data
-            country_gdf = update_country_data(
+
+            # Filter data
+            plot_data = update_country_data(
                 country_gdf,
                 outcome_var_selection,
                 ctr_filter_crit,
@@ -93,11 +118,14 @@ with sb_panel:
             )
         
         with st.expander("Selected countries"):
-            st.session_state["country_shortlist"] = sorted(country_gdf["name"].unique().tolist())
+
+            current_list = sorted(plot_data["name"].unique().tolist())
+            #st.session_state["country_shortlist"] = sorted(country_gdf["name"].unique().tolist())
+
             countries_to_display = st.multiselect(
                 "You can remove countries from the map:",
-                options=st.session_state["country_shortlist"],
-                default=st.session_state["country_shortlist"], 
+                options=current_list,#st.session_state["country_shortlist"],
+                default=current_list, #st.session_state["country_shortlist"], 
                 key="countries_to_display"
             )
             reset_ctr_2 = st.button(
@@ -107,12 +135,13 @@ with sb_panel:
             )
             if reset_ctr_2:
                 countries_to_display = st.session_state["country_shortlist"]
+
             # Update data
-            country_gdf = country_gdf[country_gdf["name"].isin(countries_to_display)]
+            plot_data = plot_data[plot_data["name"].isin(countries_to_display)]
 ####################################################################################################
 
 # Check data after filtering
-if country_gdf.empty:
+if plot_data.empty:
     st.warning("No data available for the selected filters. Please adjust your selections in the sidebar.")
     st.stop()
 
@@ -127,7 +156,8 @@ m = folium.Map(
 
 # Base layer that won't appear in layer control, but can be overlaid by geojson layers
 base = folium.FeatureGroup(name="Base Map", overlay=True, control=False)
-folium.TileLayer('OpenStreetMap').add_to(base)
+folium.TileLayer('CartoDB PositronNoLabels').add_to(base)
+
 
 # Geojson layers to show data as choropleths
 
@@ -135,8 +165,10 @@ folium.TileLayer('OpenStreetMap').add_to(base)
 from src.utils import generate_colormaps
 cm_mean, cm_std = generate_colormaps(
     outcome_var_selection, country_gdf, outcome_var_mapper, mean_mapper, disp_mapper)
-cm_mean.add_to(m)
-cm_std.add_to(m)
+
+
+#cm_mean.add_to(m)
+#cm_std.add_to(m)
 
 # Tooltips
 tooltip_mean = folium.GeoJsonTooltip(
@@ -146,7 +178,7 @@ tooltip_mean = folium.GeoJsonTooltip(
 )
 tooltip_std = folium.GeoJsonTooltip(
     fields=["name", disp_mapper[outcome_var_selection]],
-    aliases=["Country:", "Polarisation in " + outcome_var_mapper[outcome_var_selection]],
+    aliases=["Country:", "Opinion Heterogeneity on " + outcome_var_mapper[outcome_var_selection]],
     labels=True,
 )
 
@@ -156,27 +188,28 @@ fg_std = folium.FeatureGroup(name="Polarisation", control=True, overlay=False)
 
 # Layer definitions
 geojson_cm_mean = folium.GeoJson(
-    country_gdf,
+    plot_data,
     name="Average",
     style_function=lambda feature: {
         "fillColor": cm_mean(feature["properties"][mean_mapper[outcome_var_selection]])
         if feature["properties"][mean_mapper[outcome_var_selection]] is not None
         else "lightgray",
-        "color": "black",
+        "color": "white",
         "fillOpacity": 0.7,
         "weight": 0.5,
     },
     overlay=False, 
     tooltip=tooltip_mean,
 ).add_to(fg_mean)
+
 geojson_cm_std = folium.GeoJson(
-    country_gdf,
+    plot_data,
     name="Polarisation",
     style_function=lambda feature: {
         "fillColor": cm_std(feature["properties"][disp_mapper[outcome_var_selection]])
         if feature["properties"][disp_mapper[outcome_var_selection]] is not None
         else "lightgray",
-        "color": "black",
+        "color": "white",
         "fillOpacity": 0.7,
         "weight": 0.5,
     },
@@ -185,12 +218,20 @@ geojson_cm_std = folium.GeoJson(
 ).add_to(fg_std)
 
 # display map in middle panel
+if ctr_filter_crit == "Average Level":
+    active_fgs = [base, fg_mean]
+    cm_mean.add_to(m) 
+else:
+    active_fgs = [base, fg_std]
+    cm_std.add_to(m)
+    
+
 with map_panel:
     map_data = st_folium(
             m, 
             use_container_width = True, 
-            feature_group_to_add=[base, fg_mean, fg_std],
-            layer_control=folium.LayerControl(position="topright", collapsed=False),
+            feature_group_to_add=active_fgs,#[base, fg_mean, fg_std],
+            layer_control=None,#folium.LayerControl(position="topright", collapsed=False),
     )
     # st.write(map_data) # for debugging
 
@@ -221,8 +262,8 @@ with info_panel:
     country_code_a3 = st.session_state["last_clicked_country"]["code_alpha3"]
     country_code_a2 = st.session_state["last_clicked_country"]["code_alpha2"]
     country_name = st.session_state["last_clicked_country"]["name"]
-    rank_avg = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, mean_mapper[outcome_var_selection] + "_rank"].values[0]
-    rank_std = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, disp_mapper[outcome_var_selection] + "_rank"].values[0]
+    #rank_avg = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, mean_mapper[outcome_var_selection] + "_rank"].values[0]
+    #rank_std = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, disp_mapper[outcome_var_selection] + "_rank"].values[0]
     best_intervention = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, "best_intv_" + outcome_var_selection].values[0]
 
     # Header with flag and country name
@@ -233,13 +274,73 @@ with info_panel:
         st.subheader(country_name)
     
     # Basic information
-    st.write(f"Country rank for average {outcome_var_mapper[outcome_var_selection]}: {rank_avg}")
-    st.write(f"Country rank for polarisation of {outcome_var_mapper[outcome_var_selection]}: {rank_std}")
-    st.write(f"Best intervention for {outcome_var_mapper[outcome_var_selection]}: {best_intervention}")
-    with st.popover("Info on intervention"):
-        st.write("Detailed information about the best intervention.")
+    #st.write(f"Country rank for average {outcome_var_mapper[outcome_var_selection]}: {rank_avg}")
+    #st.write(f"Country rank for polarisation of {outcome_var_mapper[outcome_var_selection]}: {rank_std}")
 
-    st.write("---")
+    current_metric_col = mean_mapper[outcome_var_selection] if ctr_filter_crit == "Average Level" else disp_mapper[outcome_var_selection]
+    current_value = country_gdf.loc[country_gdf["code_alpha3"] == country_code_a3, current_metric_col].values[0]
+
+    st.write(f"**{outcome_var_mapper[outcome_var_selection]} ({'Average' if ctr_filter_crit == 'Average Level' else 'Opinion Heterogeneity'}):** {current_value:.2f}")#st.write(f"{outcome_var_mapper[outcome_var_selection]} ({ctr_filter_crit}): {current_value:.2f}")
+
+    interventions = {
+        "DynamicNorm": {
+            "title": "Dynamic Social Norms",
+            "description": "Informs participants of how norms are changing and “more and more people are becoming concerned about climate change”, suggesting that people should take action."
+        },
+        "Identity-Social-Norms-Intervention": {
+            "title": "Work Together Norm",
+            "description": "Combines referencing a social norm (i.e. 'a majority of people are taking steps to reduce their carbon footprint') with an invitation to 'join in' and work together with fellow citizens toward this common goal"
+        },
+        "CollectAction": {
+            "title": "Effective Collective Action",
+            "description": "Features examples of successful collective action that have had meaningful effects on climate policies (e.g. protests) or have solved past global issues (e.g. the restoration of the ozone layer)."
+        },
+        "PsychDistance": {
+            "title": "Psychological Distance",
+            "description": "Frames climate change as a proximal risk by using examples of recent natural disasters caused by climate change in each participants’ nation and prompts them to write about the climate impacts on their community."
+        },
+        "SystemJust": {
+            "title": "System Justification",
+            "description": "Frames climate change as threatening to the way of life to each participant’s nation, and makes an appeal to climate action, as the patriotic response."
+        },
+        "FutureSelfCont": {
+            "title": "Future-Self Continuity",
+            "description": "Emphasizes identification with future selves by asking each participant to project themselves into the future and write a letter addressed to themselves in the present, describing the actions they would have wanted to take regarding climate change."
+        },
+        "NegativeEmotions": {
+            "title": "Negative Emotions",
+            "description": "Exposes participants to ecologically valid scientific facts regarding the impacts of climate change framed in a ‘doom and gloom’ style of messaging that were drawn from different real-world news and media sources."
+        },
+        "PluralIgnorance": {
+            "title": "Pluralistic Ignorance",
+            "description": "Presents real public opinion data collected by the United Nations that shows what percentage of people in each participant’s country agree that climate change is a global emergency"
+        },
+        "Letter2Future": {
+            "title": "Letter to Future Generation",
+            "description": "Emphasizes how one’s current actions impact future generations by asking participants to write a letter to a socially close child who will read it in 25 years when they are an adult, describing current actions towards ensuring a habitable planet."
+        },
+        "BindingMoral": {
+            "title": "Binding Moral Foundations",
+            "description": "Invokes authority (e.g. 'From scientists to experts in the military, there is near universal agreement'), purity (e.g. keep our air, water, and land pure), and ingroup-loyalty (e.g., 'it is the American solution') moral foundations."
+        },
+        "ScientificConsensus": {
+            "title": "Scientific Consensus",
+            "description": "Informs participants that '99% of expert climate scientists agree that the Earth is warming, and climate change is happening, mainly because of human activity'."
+        },
+    }
+
+    intervention_details = interventions.get(best_intervention, {})
+    full_name = intervention_details.get("title", best_intervention)
+    description = intervention_details.get("description", "No detailed information available for this intervention.")
+
+    st.write(f"**Best psychological intervention to promote this metric:** {full_name}")
+
+    with st.popover("Info on Intervention"):
+        st.markdown(f"**{full_name}**")
+        st.write(description)
+
+    st.markdown('<div style="margin: 5px 0; border-top: 1px solid #ddd;"></div>', unsafe_allow_html=True)
+
 
     # Chart of outcome variable
 
@@ -285,6 +386,7 @@ with info_panel:
                 "group_bins": "Age Group"
             },
         )
+        fig.update_traces(spanmode='hard')
         st.plotly_chart(fig, use_container_width=True)
 
     
