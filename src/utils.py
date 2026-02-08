@@ -4,16 +4,13 @@ import geopandas as gpd
 import branca
 
 def reset_all_filters():
-    """Setzt alle Filter explizit auf ihre Startwerte zurück."""
-    st.session_state["num_ctr_filter"] = 63   # Slider auf Max
-    st.session_state["top_bottom"] = "Top"    # Switch auf Top
+    st.session_state["num_ctr_filter"] = 63
+    st.session_state["top_bottom"] = "Top"
     
-    # Auch die Länderauswahl unten resetten
     if "countries_to_display" in st.session_state:
         del st.session_state["countries_to_display"]
 
 def reset_multiselect():
-    """Löscht die Auswahl im Multiselect, wenn der Slider bewegt wird."""
     if "countries_to_display" in st.session_state:
         del st.session_state["countries_to_display"]
 
@@ -33,15 +30,7 @@ def load_data(path):
             df[col] = round(df[col], 2)
     return df
 
-@st.cache_data
-def get_country_aggregates(df):
-    mean = df[df["intervention"] == "control"]\
-        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
-        .mean().reset_index()
-    std = df[df["intervention"] == "control"]\
-        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
-        .std().reset_index()
-    return pd.concat([mean, std], keys=["mean", "std"], names=["stat"]).reset_index(level="stat")
+
 
 @st.cache_data
 def merge_country_data(_geo, aggs, basics):
@@ -58,6 +47,18 @@ def merge_country_data(_geo, aggs, basics):
         how="left"
     )
     return merge_2
+
+"""
+@st.cache_data
+def get_country_aggregates(df):
+    mean = df[df["intervention"] == "control"]\
+        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
+        .mean().reset_index()
+    std = df[df["intervention"] == "control"]\
+        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
+        .std().reset_index()
+    return pd.concat([mean, std], keys=["mean", "std"], names=["stat"]).reset_index(level="stat")
+"""
 
 @st.cache_data
 def mean_disp_split(_gdf):
@@ -124,14 +125,14 @@ def generate_colormaps(sel_var, _country_gdf, outcome_var_mapper, mean_mapper, d
     cm_mean = branca.colormap.LinearColormap(
         vmin=_country_gdf[mean_mapper[sel_var]].quantile(0.0),
         vmax=_country_gdf[mean_mapper[sel_var]].quantile(1.0),
-        colors=branca.colormap.linear.RdYlGn_05.colors,
+        colors=branca.colormap.linear.RdYlGn_11.colors,#branca.colormap.linear.RdYlGn_05.colors,
         caption=f"Average {outcome_var_mapper[sel_var]}",
     )
     cm_std = branca.colormap.LinearColormap(
         vmin=_country_gdf[disp_mapper[sel_var]].quantile(0.0),
         vmax=_country_gdf[disp_mapper[sel_var]].quantile(1.0),
         colors=branca.colormap.linear.RdYlGn_05.colors[::-1],
-        caption=f"Polarisation in {outcome_var_mapper[sel_var]}",
+        caption=f"Heterogeneity in {outcome_var_mapper[sel_var]}",
     )
     return cm_mean, cm_std
 #######################################################################################################

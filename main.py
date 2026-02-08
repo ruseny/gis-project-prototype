@@ -31,9 +31,10 @@ map_panel, info_panel = st.columns([0.67, 0.33])
 
 ### Load and process data ############################################################
 survey_data = load_data("data/data_individual_clean2.csv")
-country_aggregates = load_data("data/data_country_final.csv")
+country_aggregates = load_data("data/data_country_clean_sam.csv")#("data/data_country_final.csv")
 country_basics = load_data("data/country_data_basic.csv")
 country_gdf_raw = read_gpd("data/countries.geo.json")
+
 country_gdf = merge_country_data(country_gdf_raw, country_aggregates, country_basics)
 #######################################################################################
 
@@ -64,11 +65,12 @@ with sb_panel:
     
     with st.container():
         st.subheader("Focus of Analysis")
+        disp_label = "Opinion Heterogeneity (Entropy)" if outcome_var_selection == "share_social_media" else "Opinion Heterogeneity (Std. Deviation)"
+    
         ctr_filter_crit = st.radio(
             "",
-            options=["Average Level", "Opinion Heterogeneity (Std. Deviation)"],
+            options=["Average Level", disp_label],
             index=0, 
-            #help="",
             label_visibility="collapsed"
         )
 
@@ -178,7 +180,7 @@ tooltip_mean = folium.GeoJsonTooltip(
 )
 tooltip_std = folium.GeoJsonTooltip(
     fields=["name", disp_mapper[outcome_var_selection]],
-    aliases=["Country:", "Opinion Heterogeneity on " + outcome_var_mapper[outcome_var_selection]],
+    aliases=["Country:", "Opinion Heterogeneity in " + outcome_var_mapper[outcome_var_selection]],
     labels=True,
 )
 
