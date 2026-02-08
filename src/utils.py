@@ -125,7 +125,7 @@ def generate_colormaps(sel_var, _country_gdf, outcome_var_mapper, mean_mapper, d
     cm_mean = branca.colormap.LinearColormap(
         vmin=_country_gdf[mean_mapper[sel_var]].quantile(0.0),
         vmax=_country_gdf[mean_mapper[sel_var]].quantile(1.0),
-        colors=branca.colormap.linear.RdYlGn_11.colors,#branca.colormap.linear.RdYlGn_05.colors,
+        colors=branca.colormap.linear.RdYlGn_05.colors,
         caption=f"Average {outcome_var_mapper[sel_var]}",
     )
     cm_std = branca.colormap.LinearColormap(
