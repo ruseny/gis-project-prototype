@@ -52,10 +52,10 @@ def merge_country_data(_geo, aggs, basics):
 @st.cache_data
 def get_country_aggregates(df):
     mean = df[df["intervention"] == "control"]\
-        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
+        .groupby("country_code")[["belief_cc", "policy_support", "share_sm", "wept"]]\
         .mean().reset_index()
     std = df[df["intervention"] == "control"]\
-        .groupby("country_code")[["belief_cc", "policy_support", "share_social_media", "wept"]]\
+        .groupby("country_code")[["belief_cc", "policy_support", "share_sm", "wept"]]\
         .std().reset_index()
     return pd.concat([mean, std], keys=["mean", "std"], names=["stat"]).reset_index(level="stat")
 """
@@ -68,7 +68,7 @@ def mean_disp_split(_gdf):
         ]].rename(columns={
             "belief_cc_mean": "belief_cc",
             "policy_support_mean": "policy_support",
-            "share_social_media_mean": "share_social_media",
+            "share_social_media_mean": "share_sm",
             "wept_mean": "wept"
         })
     disp_data = _gdf[[
@@ -77,7 +77,7 @@ def mean_disp_split(_gdf):
         ]].rename(columns={
             "belief_cc_std": "belief_cc",
             "policy_support_std": "policy_support",
-            "share_social_media_entropy": "share_social_media",
+            "share_social_media_entropy": "share_sm",
             "wept_std": "wept"
         })
     return mean_data, disp_data
