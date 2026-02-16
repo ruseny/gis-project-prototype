@@ -180,7 +180,7 @@ cm_mean, cm_std = generate_colormaps(
 tooltip_mean = folium.GeoJsonTooltip(
     fields=["name", mean_mapper[outcome_var_selection]],
     # aliases=["Country:", "Avg. " + outcome_var_mapper[outcome_var_selection]],
-    aliases=["Country:", "Value (%)"],
+    aliases=["Country:", "Average:"],
 
     labels=True,
 )
@@ -369,7 +369,7 @@ with info_panel:
     full_name = intervention_details.get("title", best_intervention)
     description = intervention_details.get("description", "No detailed information available for this intervention.")
 
-    st.write(f"Best psychological intervention to promote this metric in this country: **{full_name}**")
+    st.write(f"Best psychological intervention to promote this metric in {country_name}: **{full_name}**")
 
     with st.popover("Info on Intervention"):
         st.markdown(f"**{full_name}**")
