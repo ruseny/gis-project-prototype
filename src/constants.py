@@ -1,7 +1,7 @@
 outcome_var_mapper = {
     "belief_cc" : "Belief in Climate Change",
     "policy_support": "Policy Support",
-    "share_social_media": "Sharing information on Social Media",
+    "share_sm": "Sharing information on Social Media",
     "wept": "Work for Environmental Protection Task"
 }
 
@@ -32,14 +32,14 @@ other_var_mapper = {
 mean_mapper = {
     "belief_cc": "belief_cc_mean",
     "policy_support": "policy_support_mean",
-    "share_social_media": "share_social_media_mean",
+    "share_sm": "share_social_media_mean",
     "wept": "wept_mean"
 }
 
 disp_mapper = {
     "belief_cc": "belief_cc_std",
     "policy_support": "policy_support_std",
-    "share_social_media": "share_social_media_entropy",
+    "share_sm": "share_social_media_entropy",
     "wept": "wept_std"
 }
 
