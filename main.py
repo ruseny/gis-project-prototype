@@ -37,8 +37,8 @@ map_panel, info_panel = st.columns([0.67, 0.33])
 ### Load and process data ############################################################
 survey_data = load_data("data/data_individual_clean2.csv")
 survey_data2 = load_data("data/data_individual_clean.csv")
-country_aggregates = load_data("data/data_country_clean_sam.csv")#("data/data_country_final.csv")
-for metric in ["belief_cc_mean", "policy_support_mean", "share_social_media_mean", "wept_mean"]:
+country_aggregates = load_data("data/data_country_clean_sam2.csv")#("data/data_country_final.csv")
+for metric in ["belief_cc_mean", "policy_support_mean", "share_social_media_mean"]:
     country_aggregates[metric] = country_aggregates[metric].round().astype(int)
 country_basics = load_data("data/country_data_basic.csv")
 country_gdf_raw = read_gpd("data/countries.geo.json")
@@ -53,7 +53,7 @@ country_gdf = country_gdf.rename(columns={"best_intv_share_social_media": "best_
 outcomes = {
     "belief_cc": "Measures climate change convictions on a scale from 0 (not at all accurate) to 100 (extremely accurate). The score averages agreement with four key statements regarding the necessity of climate action, human causes, and the urgency of the global emergency.",
     "policy_support": "Measures agreement with climate policies on a scale from 0 (not at all) to 100 (very much so). The score reflects average support across nine areas, including carbon taxes, public transport expansion, renewable energy investment, and the protection of natural ecosystems.",
-    "share_sm": "Measures willingness to share a climate-fact about meat and dairy consumption on social media. Participants were presented with an educational post and asked if they would share it.",    
+    "share_sm": "Measures willingness to share a climate-fact about meat and dairy consumption on social media. Participants were presented with an educational post and asked if they would share it. The values presented for this metric are percentages.",    
     "wept": "Measures real-world pro-environmental behavior using the psychological test WEPT (Work for Environmental Protection Task). Participants performed voluntary, repetitive cognitive tasks that would resuslt on tree-planting donations."
 }
 
