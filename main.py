@@ -76,11 +76,11 @@ with sb_panel:
     
     with st.container():
         st.subheader("Focus of Analysis")
-        disp_label = "Opinion Heterogeneity (Entropy)" if outcome_var_selection == "share_sm" else "Polarization (Std. Deviation)"
+        #disp_label = "Opinion Heterogeneity (Entropy)" if outcome_var_selection == "share_sm" else "Polarization (Std. Deviation)"
     
         ctr_filter_crit = st.radio(
             "",
-            options=["Average Level", disp_label],
+            options=["Average Level", "Opinion Heterogeneity"],
             index=0, 
             label_visibility="collapsed"
         )
@@ -359,7 +359,7 @@ with info_panel:
             "title": "Binding Moral Foundations",
             "description": "Invokes authority (e.g. 'From scientists to experts in the military, there is near universal agreement'), purity (e.g. keep our air, water, and land pure), and ingroup-loyalty (e.g., 'it is the American solution') moral foundations."
         },
-        "ScientificConsensus": {
+        "SciConsens": {
             "title": "Scientific Consensus",
             "description": "Informs participants that '99% of expert climate scientists agree that the Earth is warming, and climate change is happening, mainly because of human activity'."
         },
